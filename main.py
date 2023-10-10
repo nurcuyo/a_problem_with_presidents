@@ -24,9 +24,9 @@ with open("U.S. Presidents Birth and Death Information - Sheet1.csv", 'r') as f1
                 towrite = (line + [yob, diff.years, diff.months+diff.years*12, (str(end_date-start_date)[:5])])
             writer.writerow(towrite)
 
-# Display tables for Oldest and Youngest Presidents (pandas)
+# Display tables for Oldest and Youngest Presidents
 
-df = pd.read_csv('BDI_Copy.csv', engine='python', skipfooter=2)  # engine suppresses warning, skip footer omits ref
+df = pd.read_csv('BDI_Copy.csv', engine='python', skipfooter=1)  # engine suppresses warning, skip footer omits ref
 df = df.fillna('-')
 
 # Since 'lived_years' represents a floored value for age in years, I added a more accurate column here to break ties
@@ -34,40 +34,48 @@ df = df.fillna('-')
 true_years = []
 for index, row in df.iterrows():
     true_years += ["{:.2f}".format((row['lived_days'])/365.25)]
-    print(true_years)
 df['true_lived_years'] = true_years
 
 topTen = df.nlargest(10, 'lived_days')[['PRESIDENT', 'year_of_birth', 'lived_years', 'true_lived_years', 'lived_months', 'lived_days']]
+topTen.style.set_caption("Longest Lived Presidents")
+print("Oldest Presidents")
 print(tabulate(topTen, headers='keys', showindex=False, tablefmt="rounded_grid"))
 print('\n')
+print("Youngest Presidents")
 bottomTen = df.nsmallest(10, 'lived_days')[['PRESIDENT', 'year_of_birth', 'lived_years', 'true_lived_years', 'lived_months', 'lived_days']]
 print(tabulate(bottomTen, headers='keys', showindex=False, tablefmt="rounded_grid"))
 
 # Calculating statistics for lived_days
 
 sr = df['lived_days']
-# print(sr)
 
-mean = sr.mean()
+mean = "{:.2f}".format(sr.mean())
 median = sr.median()
-mode = sr.mode()
+mode = sr.mode()[0]  # At the moment, there is no mode (all values are mode), so we just pick the first value
 mx = sr.max()
 mn = sr.min()
-stdev = sr.std()
-wavg = 0
+st_dev = "{:.2f}".format(sr.std())
+w_avg = '-'
+
+stat_df = pd.DataFrame()
+stat_df['Statistic'] = ['Mean', 'Weighted Avg', 'Median', 'Mode', 'Maximum', 'Minimum', 'Std Deviation']
+stat_df['Value'] = [mean, w_avg, median, mode, mx, mn, st_dev]
 
 print('\n')
-print("Mean:", mean)
-print("Median:", median)
-# print("Mode:", mode)  # no values repeat so there is no mode
-print("Max:", mx)
-print("Min:", mn)
-print("Standard Deviation:", stdev)
+print(tabulate(stat_df, headers='keys', showindex=False, tablefmt='rounded_grid', numalign='right'))
 
-# Plotting (pandas and matplotlib)
+# Plotting
 
-topTen.plot.scatter(label='Oldest Presidents\' Lived Years vs Birth Year', x='year_of_birth', y='true_lived_years', c='Black')
+# These plots are for easier visualization of the Top/Bottom 10 Tables
+
+topTen.plot.scatter(x='year_of_birth', y='true_lived_years', c='Black')
+plt.title('Presidential Lifespan by Birth Year: Top 10')
 plt.gca().invert_yaxis()
-bottomTen.plot.scatter(label='Youngest Presidents\' Lived Years vs Birth Year', x='year_of_birth', y='true_lived_years', c='Red')
-plt.show()
+bottomTen.plot.scatter(x='year_of_birth', y='true_lived_years', c='Red')
+plt.title('Presidential Lifespan by Birth Year: Bottom 10')
 
+# Histogram to show distribution of lived days
+
+df.plot.hist(column='lived_days', bins=12, xlim=(15000, 40000))
+plt.title('Distribution of Presidential Lifespans')
+plt.show()
