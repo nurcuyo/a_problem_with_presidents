@@ -76,6 +76,6 @@ plt.title('Presidential Lifespan by Birth Year: Bottom 10')
 
 # Histogram to show distribution of lived days
 
-df.plot.hist(column='lived_days', bins=12, xlim=(15000, 40000))
+df.plot.hist(column='lived_days', bins=12, xlim=(10000, 40000))
 plt.title('Distribution of Presidential Lifespans')
 plt.show()
